@@ -49,14 +49,46 @@ def process_image_openpose(img_path, model, model_type):
     draw_openpose(img_path, model, model_type)
 
 
+def mediapipe_pose_detection():
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose()
+    mp_drawing = mp.solutions.drawing_utils
+    cap = cv.VideoCapture(0)
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        results = pose.process(rgb_frame)
+
+        # if results.pose_landmarks:
+        #     for landmark in results.pose_landmarks.landmark:
+        #         h, w, c = frame.shape
+        #         cx, cy = int(landmark.x * w), int(landmark.y * h)
+        #         cv.circle(frame, (cx, cy), 5, (0, 255, 0), cv.FILLED)
+        if results.pose_landmarks:
+            mp_drawing.draw_landmarks(
+                frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
+        
+        cv.imshow("Pose Detection", frame)
+
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+    cap.release()
+    cv.destroyAllWindows()
+
+
 if __name__=='__main__':
     isOpenPose = True
     if sys.argv[1].lower().strip() == 'false':
         isOpenPose = False
+        mediapipe_pose_detection()
+    else:
+        model_type = sys.argv[2].lower().strip()
+        print(len(model_type))
 
-    model_type = sys.argv[2].lower().strip()
-    print(len(model_type))
-
-    model = load_classificator(model_type, isOpenPose)
-    process_image_openpose('data/HAR/HumanActionRecognition/train/Image_37.jpg', model, model_type)
+        model = load_classificator(model_type, isOpenPose)
+        process_image_openpose('data/HAR/HumanActionRecognition/train/Image_37.jpg', model, model_type)
         
