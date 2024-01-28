@@ -45,6 +45,7 @@ columns_mp = ['label', 'coordinate 0', 'coordinate 1', 'coordinate 2', 'coordina
              'coordinate 53', 'coordinate 54', 'coordinate 55', 'coordinate 56', 'coordinate 57', 'coordinate 58', 'coordinate 59', 'coordinate 60', 'coordinate 61',
              'coordinate 62', 'coordinate 63', 'coordinate 64', 'coordinate 65']
 
+classes = ['CYCLING', 'DRINKING', 'RUNNING', 'SITTING', 'SLEEPING']
 
 
 
@@ -55,10 +56,8 @@ def getKeypoints(probMap, threshold=0.1):
     mapMask = np.uint8(mapSmooth>threshold)
     keypoints = []
 
-    #find the blobs
     contours, _ = cv.findContours(mapMask, cv.RETR_TREE, cv.CHAIN_APPROX_SIMPLE)
 
-    #for each blob find the maxima
     for cnt in contours:
         blobMask = np.zeros(mapMask.shape)
         blobMask = cv.fillConvexPoly(blobMask, cnt, 1)
@@ -193,7 +192,7 @@ def detect(img_path, net):
 
 
 def preprocess_dataset(path):
-    labels_df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/Training_set10to12.csv");
+    labels_df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/Training_set10to12.csv")
     net = cv.dnn.readNetFromCaffe(protoFile, weightsFile)
     net.setPreferableBackend(cv.dnn.DNN_TARGET_CPU)
     # net.setPreferableBackend(cv.dnn.DNN_BACKEND_CUDA)
@@ -218,9 +217,31 @@ def preprocess_dataset(path):
         output_df.loc[len(output_df)] = row
     output_df.to_csv('/content/drive/MyDrive/ColabNotebookss/OpenPose/HAR-dataset10to12.csv', index=False)
 
+def predict_openpose(key_list, personKeyPoints, model, model_type):
+    row = []
+    if len(personKeyPoints) == 0:
+        return None
+    index_of_min_list = min(range(len(personKeyPoints)), key=lambda i: list(personKeyPoints[i]).count(-1))
+    for i in range(18):
+        index = personKeyPoints[index_of_min_list][i]
+        if -1 == index:
+            row = row + [0, 0]
+            continue
+        point = np.int32(key_list[index.astype(int)])
+        row += [point[0], point[1]]
+    
+
+    if model_type != 'nn':
+        row = np.array(row).reshape(1, -1)
+        prediction = model.predict(row)
+        return classes[prediction[0]]
+    else:
+        row = np.array(row).reshape(- 1, 18, 2)
+        prediction = model.predict(row)
+        return(classes[np.argmax(prediction)])
 
 def preprocess_mediapipe(path):
-    labels_df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/HumanActionRecognition/Training_set.csv");
+    labels_df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/HumanActionRecognition/Training_set.csv")
     mp_pose = mp.solutions.pose
     pose = mp_pose.Pose()
     output_df = pd.DataFrame(columns=columns_mp)
@@ -250,7 +271,7 @@ def preprocess_mediapipe(path):
 # preprocess_dataset("/content/drive/MyDrive/ColabNotebookss/OpenPose/HumanActionRecognition/train")
 
 
-def draw_openpose(path):
+def draw_openpose(path, model, model_type):
     net = cv.dnn.readNetFromCaffe(protoFile, weightsFile)
     net.setPreferableBackend(cv.dnn.DNN_TARGET_CPU)
     image = cv.imread(path)
@@ -306,6 +327,9 @@ def draw_openpose(path):
             cv.line(frameClone, (B[0], A[0]), (B[1], A[1]), colors[i], 3, cv.LINE_AA)
 
     frameClone = cv.resize(frameClone, (500, 500))
+    class_name = predict_openpose(keypoints_list, personwiseKeypoints, model, model_type)
+    cv.rectangle(frameClone, (0, 0), (150, 40), (0, 0, 0), -1)
+    cv.putText(frameClone, class_name, (2, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 1)
     cv.imshow("Detected Pose" , frameClone)
     cv.waitKey(0)
 
