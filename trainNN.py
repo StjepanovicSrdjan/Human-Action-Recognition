@@ -1,7 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[62]:
 
 
 import tensorflow as tf
@@ -18,15 +14,10 @@ from sklearn.svm import SVC
 from sklearn.ensemble import RandomForestClassifier
 
 
-# In[110]:
 
-
-df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/dataset_mp_F.csv")
-df = df[df['label'].isin(['sitting', 'running', 'drinking', 'cycling', 'sleeping'])]
-df.to_csv('data_set_mp_srdcs.csv', index=False)
-
-
-# In[71]:
+# df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/dataset_mp_F.csv")
+# df = df[df['label'].isin(['sitting', 'running', 'drinking', 'cycling', 'sleeping'])]
+# df.to_csv('data_set_mp_srdcs.csv', index=False)
 
 
 def split_dataset(x, y, train_split=0.8, validation_split=0.1, join_validation=True, keypoints_num=18):
@@ -57,9 +48,6 @@ def split_dataset(x, y, train_split=0.8, validation_split=0.1, join_validation=T
     return x_train, y_train, x_val, y_val, x_test, y_test
 
 
-# In[111]:
-
-
 def load_dataset():
     df = pd.read_csv("/content/drive/MyDrive/ColabNotebookss/OpenPose/data_set_mp_srdcs.csv")
     if ('Unnamed: 0' in df.columns):
@@ -71,16 +59,11 @@ def load_dataset():
     return x_df.to_numpy(), y_df.to_numpy(), classes
 
 
-# In[114]:
-
-
 def get_data(join_validation, keypoints_num):
     data_x, data_y, classes = load_dataset()
     x_train, y_train, x_val, y_val, x_test, y_test = split_dataset(data_x, data_y, join_validation=join_validation, keypoints_num=keypoints_num)
     return x_train, y_train, x_val, y_val, x_test, y_test, classes
 
-
-# In[122]:
 
 
 def train_nn(x_train, y_train, x_val, y_val, save_model=False, verbose=True, keypoints_num=18):
@@ -110,9 +93,6 @@ def train_nn(x_train, y_train, x_val, y_val, save_model=False, verbose=True, key
     # print(predictions)
 
 
-# In[123]:
-
-
 def train_svm(x_train, y_train, x_val, y_val, verbose=True, save_model=False, keypoints_num=18):
     y_1d = tf.argmax(y_train, axis=1).numpy()
     x_train = x_train.reshape((x_train.shape[0], keypoints_num * 2))
@@ -130,7 +110,6 @@ def train_svm(x_train, y_train, x_val, y_val, verbose=True, save_model=False, ke
             pickle.dump(clf, file)
 
 
-# In[124]:
 
 
 def train_random_forest(x_train, y_train, x_val, y_val, verbose=True, save_model=False, keypoints_num=18):
@@ -150,17 +129,13 @@ def train_random_forest(x_train, y_train, x_val, y_val, verbose=True, save_model
             pickle.dump(clf, file)
 
 
-# In[127]:
 
-
-x_train, y_train, x_val, y_val, x_test, y_test, classes = get_data(False, 33)
-# train_nn(x_train, y_train, x_test, y_test, save_model=True, verbose=False, keypoints_num=33)
-# train_svm(x_train, y_train, x_test, y_test, save_model=True, verbose=False, keypoints_num=33)
-train_random_forest(x_train, y_train, x_test, y_test, save_model=True, verbose=False, keypoints_num=33)
-print(classes)
-
-
-# In[ ]:
+if __name__=='__main__':
+    x_train, y_train, x_val, y_val, x_test, y_test, classes = get_data(False, 33)
+    # train_nn(x_train, y_train, x_test, y_test, save_model=True, verbose=False, keypoints_num=33)
+    # train_svm(x_train, y_train, x_test, y_test, save_model=True, verbose=False, keypoints_num=33)
+    train_random_forest(x_train, y_train, x_test, y_test, save_model=True, verbose=False, keypoints_num=33)
+    print(classes)
 
 
 

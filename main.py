@@ -5,7 +5,7 @@ import numpy as np
 import pickle
 import tensorflow as tf
 from tensorflow.keras.models import load_model
-from data_preprocessing import draw_openpose
+from openpose import draw_openpose
 import sys
 
 
@@ -63,11 +63,6 @@ def mediapipe_pose_detection():
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         results = pose.process(rgb_frame)
 
-        # if results.pose_landmarks:
-        #     for landmark in results.pose_landmarks.landmark:
-        #         h, w, c = frame.shape
-        #         cx, cy = int(landmark.x * w), int(landmark.y * h)
-        #         cv.circle(frame, (cx, cy), 5, (0, 255, 0), cv.FILLED)
         if results.pose_landmarks:
             mp_drawing.draw_landmarks(
                 frame, results.pose_landmarks, mp_pose.POSE_CONNECTIONS)
