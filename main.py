@@ -6,15 +6,17 @@ import pickle
 import tensorflow as tf
 from tensorflow.keras.models import load_model
 from openpose import draw_openpose
-from data_preprocessing import classes
 import sys
 
+classes_mp = ['DANCING', 'DRINKING', 'SITTING']
 
 def load_nn_model(isOpenPose=True):
     if isOpenPose:
         model = load_model("models/HAR_model_op")
     else:
-        model = load_model("models/HAR_model_mp")
+        # model = load_model("models/HAR_model_mp")
+        model = load_model("models/HAR_model_mp_sdd")
+
     print(model.summary())
     return model
 
@@ -24,7 +26,9 @@ def load_svm_model(isOpenPose=True):
         with open("models/svm_op.pickle", "rb") as file:
             model = pickle.load(file)
     else:
-        with open("models/svm_mp.pickle", "rb") as file:
+        # with open("models/svm_mp.pickle", "rb") as file:
+        #     model = pickle.load(file)
+        with open("models/svm_mp_sdd.pickle", "rb") as file:
             model = pickle.load(file)
     return model
 
@@ -34,7 +38,9 @@ def load_random_forest_model(isOpenPose=True):
         with open("models/random_forest_op.pickle", "rb") as file:
             model = pickle.load(file)
     else:
-        with open("models/random_forest_mp.pickle", "rb") as file:
+        # with open("models/random_forest_mp.pickle", "rb") as file:
+        #     model = pickle.load(file)
+        with open("models/random_forest_mp_sdd.pickle", "rb") as file:
             model = pickle.load(file)
     return model
 
@@ -62,6 +68,7 @@ def mediapipe_pose_detection(model_type, model):
             break
 
         rgb_frame = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
+        rgb_frame = cv.resize(rgb_frame, (240, 240))
         results = pose.process(rgb_frame)
 
         if results.pose_landmarks:
@@ -77,11 +84,11 @@ def mediapipe_pose_detection(model_type, model):
             if model_type != 'nn':
                 row = np.array(row).reshape(1, -1)
                 prediction = model.predict(row)
-                class_name = classes[prediction[0]]
+                class_name = classes_mp[prediction[0]]
             else:
                 row = np.array(row).reshape(- 1, 33, 2)
                 prediction = model.predict(row)
-                class_name = classes[np.argmax(prediction)]
+                class_name = classes_mp[np.argmax(prediction)]
             
             cv.rectangle(frame, (0, 0), (150, 40), (0, 0, 0), -1)
             cv.putText(frame, class_name, (2, 30), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 1)
