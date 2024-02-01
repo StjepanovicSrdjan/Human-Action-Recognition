@@ -110,8 +110,10 @@ if __name__=='__main__':
         mediapipe_pose_detection(model_type, model)
     else:
         model_type = sys.argv[2].lower().strip()
-        print(len(model_type))
+        image_name = 'test/' + str(sys.argv[3])
+        # print(len(model_type))
 
         model = load_classificator(model_type, isOpenPose)
-        process_image_openpose('data/HAR/HumanActionRecognition/train/Image_37.jpg', model, model_type)
+        # process_image_openpose('data/HAR/HumanActionRecognition/train/Image_37.jpg', model, model_type)
+        process_image_openpose(image_name, model, model_type)
         
